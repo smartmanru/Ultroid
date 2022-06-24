@@ -40,3 +40,8 @@ bin-release/
 *.raw
 tplugins
 tassistant
+venv/
+lib
+lib64
+resources/downloads
+share
