@@ -47,6 +47,10 @@
 
 • `{i}ncode <file>`
    Use - Paste the contents of file and send as pic.
+   
+• `{i}getmsg <message link>`
+  Get messages from chats with forward/copy restrictions.
+
 """
 import calendar
 import html
@@ -60,6 +64,7 @@ try:
 except ImportError:
     Image = None
 
+from pyUltroid.functions.tools import get_chat_and_msgid
 from pyUltroid._misc._assistant import asst_cmd
 from pyUltroid.dB.gban_mute_db import is_gbanned
 
@@ -549,7 +554,11 @@ async def sugg(event):
             "`Please reply to a message to make a suggestion poll!`",
         )
     if event.is_reply and not text:
-        text = "Do you Agree to Replied Suggestion ?"
+        reply = await event.get_reply_message()
+        if reply.text and len(reply.text) < 35:
+            text = reply.text
+        else:
+            text = "Do you Agree to Replied Suggestion ?"
     reply_to = event.reply_to_msg_id if event.is_reply else event.id
     try:
         await event.client.send_file(
@@ -709,3 +718,34 @@ async def coder_print(event):
     if a:
         os.remove(a)
     os.remove("result.png")
+
+
+@ultroid_cmd(pattern="getmsg ?(.*)")
+async def get_restriced_msg(event):
+    match = event.pattern_match.group(1)
+    if not match:
+        await event.eor("`Please provide a link!`", time=5)
+        return
+    xx = await event.eor(get_string("com_1"))
+    chat, msg = get_chat_and_msgid(match)
+    if not (chat and msg):
+        await event.eor(
+            "Provide a valid message link!\nEg: `https://t.me/TeamUltroid/3 or `https://t.me/c/1313492028/3`"
+        )
+    try:
+        message = await event.client.get_messages(chat, ids=msg)
+    except BaseException as er:
+        await event.eor(f"**ERROR**\n`{er}`")
+    if message.media:
+        media, _ = await event.client.fast_downloader(
+            message.document,
+            show_progress=True,
+            event=xx,
+            message="Downloading message media...",
+        )
+        await xx.edit("`Uploading...`")
+        uploaded, _ = await event.client.fast_uploader(
+            media, event=xx, show_progress=True, to_delete=True
+        )
+        await event.reply(message.text, file=uploaded)
+        await xx.delete()
