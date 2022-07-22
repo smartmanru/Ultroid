@@ -4,19 +4,11 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
-"""
-✘ Commands Available -
 
-• `{i}compress <reply to video>`
-    optional `crf` and `stream`
-    Example : `{i}compress 27 stream` or `{i}compress 28`
-    Encode the replied video according to CRF value.
-    Less CRF == High Quality, More Size
-    More CRF == Low Quality, Less Size
-    CRF Range = 20-51
-    Default = 27
+from . import get_help
 
-"""
+__doc__ = get_help("help_compressor")
+
 
 import asyncio
 import os
@@ -117,7 +109,6 @@ async def _(e):
                         "".join("" for _ in range(20 - math.floor(per / 5))),
                         round(per, 2),
                     )
-
 
                     e_size = f"{humanbytes(size)} of ~{humanbytes((size / per) * 100)}"
                     eta = f"~{time_formatter(some_eta)}"

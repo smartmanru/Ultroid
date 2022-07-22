@@ -3,30 +3,30 @@
 
 | Code | Language | Translated | Remaining |
 |----|-------|-------|---|
-| en | English [English] | 418 | 0 |
-| ar | Arabic [العربية] | 418 | NULL |
-| si | sinhala [සිංහල] | 112 | 306 |
-| hi | Hindi [हिंदी] | 413 | 5 |
-| fr | French [Français] | 110 | 308 |
-| jp | Japanese [日本] | 413 | 5 |
-| fa | Persian [Farsi] | 391 | 27 |
-| id | Indonesia [Indonesia] | 413 | 5 |
-| pt-br | Portuguese [Português] | 413 | 5 |
-| gu | Gujarati [ગુજરાતી] | 109 | 309 |
-| ml | Malayalam [മലയാളം] | 112 | 306 |
-| ru | Russian [Русский] | 413 | 5 |
-| ta | தமிழ் [தமிழ்] | 112 | 306 |
-| my | Malay [Bahasa Melayu] | 112 | 306 |
-| es | Spanish [Español] | 409 | 9 |
-| od | Odia [ଓଡିଆ] | 112 | 306 |
-| tr | Turkish [Türk] | 112 | 306 |
-| mr | Marathi [मराठी] | 131 | 287 |
-| cn | Chinese [简体中文] | 112 | 306 |
-| ka | Kannada [ಕನ್ನಡ] | 112 | 306 |
-| bn | Bengali [বাংলা] | 382 | 36 |
-| it | Italian [italiano] | 111 | 307 |
-| az | Azerbaijan [Azərbaycan] | 382 | 36 |
+| en | English [English] | 478 | 0 |
+| si | sinhala [සිංහල] | 473 | 5 |
+| ta | தமிழ் [தமிழ்] | 478 | NULL |
+| it | Italian [italiano] | 475 | 3 |
+| pt-br | Português [Português] | 483 | -5 |
+| my | Malay [Bahasa Melayu] | 468 | 10 |
+| az | Azerbaijan [Azərbaycan] | 478 | NULL |
+| jp | Japanese [日本] | 478 | NULL |
+| mr | Marathi [मराठी] | 482 | -4 |
+| tr | Turkish [Türk] | 478 | NULL |
+| ml | Malayalam [മലയാളം] | 478 | NULL |
+| id | Indonesia [Indonesia] | 478 | NULL |
+| ru | Russian [Русский] | 478 | NULL |
+| cn | Chinese [简体中文] | 478 | NULL |
+| hi | Hindi [हिंदी] | 478 | NULL |
+| uz | Uzbekcha [Uzbekcha] | 478 | NULL |
+| es | Spanish [Español] | 478 | NULL |
+| gu | Gujarati [ગુજરાતી] | 460 | 18 |
+| or | Odia [ଓଡିଆ] | 478 | NULL |
+| ka | Kannada [ಕನ್ನಡ] | 460 | 18 |
+| fr | French [Français] | 478 | NULL |
+| bn | Bengali [বাংলা] | 478 | NULL |
+| ar | Arabic [العربية] | 478 | NULL |
+| fa | Persian [Farsi] | 479 | -1 |
 
 
 If Strings are not present, Google Translation will be used to Translate them at time of Usage.
-<br>• Remaining Strings can be found [here](./remaining.csv) for easy sort out.

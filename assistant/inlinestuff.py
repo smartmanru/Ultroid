@@ -8,10 +8,10 @@
 import base64
 import inspect
 from datetime import datetime
+from html import unescape
 from random import choice
 from re import compile as re_compile
 
-from html import unescape
 from bs4 import BeautifulSoup as bs
 from pyUltroid.functions.misc import google_search
 from pyUltroid.functions.tools import (
@@ -447,98 +447,6 @@ async def do_magic(event):
     await event.answer(ress, switch_pm=msg, switch_pm_param="start")
 
 
-_koo_ = {}
-
-
-@in_pattern("koo", owner=True)
-async def koo_search(ult):
-    """Search Users on koo with API"""
-    try:
-        match = ult.text.split(maxsplit=1)[1].lower()
-        match_ = match
-    except IndexError:
-        return await ult.answer(
-            [], switch_pm="Enter Query to Search..", switch_pm_param="start"
-        )
-    if _koo_.get(match):
-        return await ult.answer(
-            _koo_[match], switch_pm="• Koo Search •", switch_pm_param="start"
-        )
-    res = []
-    se_ = None
-    key_count = None
-    if " | " in match:
-        match = match.split(" | ", maxsplit=1)
-        try:
-            key_count = int(match[1])
-        except ValueError:
-            pass
-        match = match[0]
-    match = match.replace(" ", "+")
-    req = await async_searcher(
-        f"https://www.kooapp.com/apiV1/search?query={match}&searchType=EXPLORE",
-        re_json=True,
-    )
-    if key_count:
-        try:
-            se_ = [req["feed"][key_count - 1]]
-        except KeyError:
-            pass
-    if not se_:
-        se_ = req["feed"]
-    for count, feed in enumerate(se_[:10]):
-        if feed["uiItemType"] == "search_profile":
-            count += 1
-            item = feed["items"][0]
-            profileImage = (
-                item["profileImageBaseUrl"]
-                if item.get("profileImageBaseUrl")
-                else "https://telegra.ph/file/dc28e69bd7ea2c0f25329.jpg"
-            )
-            extra = await async_searcher(
-                "https://www.kooapp.com/apiV1/users/handle/" + item["userHandle"],
-                re_json=True,
-            )
-            img = wb(profileImage, 0, "image/jpeg", [])
-            text = f"‣ **Name :** `{item['name']}`"
-            if extra.get("title"):
-                text += f"\n‣ **Title :** `{extra['title']}`"
-            text += f"\n‣ **Username :** `@{item['userHandle']}`"
-            if extra.get("description"):
-                text += f"\n‣ **Description :** `{extra['description']}`"
-            text += f"\n‣ **Followers :** `{extra['followerCount']}`    ‣ **Following :** {extra['followingCount']}"
-            if extra.get("socialProfile") and extra["socialProfile"].get("website"):
-                text += f"\n‣ **Website :** {extra['socialProfile']['website']}"
-            res.append(
-                await ult.builder.article(
-                    title=item["name"],
-                    description=item.get("title") or f"@{item['userHandle']}",
-                    type="photo",
-                    content=img,
-                    thumb=img,
-                    include_media=True,
-                    text=text,
-                    buttons=[
-                        Button.url(
-                            "View",
-                            "https://kooapp.com/profile/" + item["userHandle"],
-                        ),
-                        Button.switch_inline(
-                            "• Share •",
-                            query=ult.text if key_count else f"{ult.text} | {count}",
-                        ),
-                    ],
-                )
-            )
-
-    if not res:
-        switch = "No Results Found :("
-    else:
-        _koo_.update({match_: res})
-        switch = f"Showing {len(res)} Results!"
-    await ult.answer(res, switch_pm=switch, switch_pm_param="start")
-
-
 # Thanks to OpenSource
 _bearer_collected = [
     "AAAAAAAAAAAAAAAAAAAAALIKKgEAAAAA1DRuS%2BI7ZRKiagD6KHYmreaXomo%3DP5Vaje4UTtEkODg0fX7nCh5laSrchhtLxeyEqxXpv0w9ZKspLD",
@@ -621,14 +529,14 @@ async def savn_s(event):
     res = []
     for song in results:
         thumb = wb(song["image"], 0, "image/jpeg", [])
-        text = f"• **Title :** {song['song']}"
+        text = f"• **Title :** {song['title']}"
         text += f"\n• **Year :** {song['year']}"
         text += f"\n• **Lang :** {song['language']}"
-        text += f"\n• **Artist :** {song['primary_artists']}"
+        text += f"\n• **Artist :** {song['artists']}"
         text += f"\n• **Release Date :** {song['release_date']}"
         res.append(
             await event.builder.article(
-                title=song["song"],
+                title=song["title"],
                 type="audio",
                 text=text,
                 include_media=True,
@@ -637,14 +545,14 @@ async def savn_s(event):
                 ),
                 thumb=thumb,
                 content=wb(
-                    song["media_url"],
+                    song["url"],
                     0,
                     "audio/mp4",
                     [
                         Audio(
-                            title=song["song"],
+                            title=song["title"],
                             duration=int(song["duration"]),
-                            performer=song["primary_artists"],
+                            performer=song["artists"],
                         )
                     ],
                 ),
@@ -652,7 +560,6 @@ async def savn_s(event):
         )
     await event.answer(res, switch_pm=swi, switch_pm_param="start")
     _savn_cache.update({query: res})
-
 
 
 @in_pattern("tl", owner=True)
@@ -697,18 +604,18 @@ async def inline_tl(ult):
     await ult.answer(res[:50], switch_pm=mo, switch_pm_param="start")
 
 
-
-InlinePlugin.update({
-    "Pʟᴀʏ Sᴛᴏʀᴇ Aᴘᴘs": "app telegram",
-    "Mᴏᴅᴅᴇᴅ Aᴘᴘs": "mods minecraft",
-    "Sᴇᴀʀᴄʜ Oɴ Gᴏᴏɢʟᴇ": "go TeamUltroid",
-    "WʜɪSᴘᴇʀ": "wspr @username Hello🎉",
-    "YᴏᴜTᴜʙᴇ Dᴏᴡɴʟᴏᴀᴅᴇʀ": "yt Ed Sheeran Perfect",
-    "Piston Eval": "run javascript console.log('Hello Ultroid')",
-    "OʀᴀɴɢᴇFᴏx🦊": "ofox beryllium",
-    "Tᴡɪᴛᴛᴇʀ Usᴇʀ": "twitter theultroid",
-    "Kᴏᴏ Sᴇᴀʀᴄʜ": "koo @__kumar__amit",
-    "Fᴅʀᴏɪᴅ Sᴇᴀʀᴄʜ": "fdroid telegram",
-    "Sᴀᴀᴠɴ sᴇᴀʀᴄʜ": "saavn",
-    "Tʟ Sᴇᴀʀᴄʜ": "tl",
-})
+InlinePlugin.update(
+    {
+        "Pʟᴀʏ Sᴛᴏʀᴇ Aᴘᴘs": "app telegram",
+        "Mᴏᴅᴅᴇᴅ Aᴘᴘs": "mods minecraft",
+        "Sᴇᴀʀᴄʜ Oɴ Gᴏᴏɢʟᴇ": "go TeamUltroid",
+        "WʜɪSᴘᴇʀ": "wspr @username Hello🎉",
+        "YᴏᴜTᴜʙᴇ Dᴏᴡɴʟᴏᴀᴅᴇʀ": "yt Ed Sheeran Perfect",
+        "Piston Eval": "run javascript console.log('Hello Ultroid')",
+        "OʀᴀɴɢᴇFᴏx🦊": "ofox beryllium",
+        "Tᴡɪᴛᴛᴇʀ Usᴇʀ": "twitter theultroid",
+        "Fᴅʀᴏɪᴅ Sᴇᴀʀᴄʜ": "fdroid telegram",
+        "Sᴀᴀᴠɴ sᴇᴀʀᴄʜ": "saavn",
+        "Tʟ Sᴇᴀʀᴄʜ": "tl",
+    }
+)

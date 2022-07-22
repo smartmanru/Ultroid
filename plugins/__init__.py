@@ -24,7 +24,7 @@ from pyUltroid.version import __version__, ultroid_version
 from telethon import Button, events
 from telethon.tl import functions, types
 
-from strings import get_string
+from strings import get_help, get_string
 
 Redis = udB.get_key
 con = TgConverter
@@ -33,6 +33,7 @@ OWNER_NAME = ultroid_bot.full_name
 OWNER_ID = ultroid_bot.uid
 
 LOG_CHANNEL = udB.get_key("LOG_CHANNEL")
+
 
 def inline_pic():
     INLINE_PIC = udB.get_key("INLINE_PIC")
@@ -49,7 +50,7 @@ List = []
 Dict = {}
 InlinePlugin = {}
 N = 0
-
+cmd = ultroid_cmd
 STUFF = {}
 
 # Chats, which needs to be ignore for some cases

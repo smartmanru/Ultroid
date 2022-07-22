@@ -5,33 +5,13 @@
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-"""
-✘ Commands Available -
+from . import get_help
 
-• `{i}bash <cmds>`
-• `{i}bash -c <cmds>` Carbon image as command output.
-    Run linux commands on telegram.
-
-• `{i}eval <code>`
-    Evaluate python commands on telegram.
-    Shortcuts:
-        client = bot = event.client
-        e = event
-        p = print
-        reply = await event.get_reply_message()
-        chat = event.chat_id
-
-• `{i}cpp <code>`
-    Run c++ code from Telegram.
-
-• `{i}sysinfo`
-    Shows System Info.
-"""
+__doc__ = get_help("help_devtools")
 
 import inspect
 import sys
 import traceback
-from datetime import datetime
 from io import BytesIO, StringIO
 from os import remove
 from pprint import pprint
@@ -46,12 +26,14 @@ except ImportError:
 from random import choice
 
 try:
+    from yaml import safe_load
+except ImportError:
+    from pyUltroid.functions.tools import safe_load
+try:
     from telegraph import upload_file as uf
 except ImportError:
     uf = None
 from . import *
-
-_ignore_eval = []
 
 
 @ultroid_cmd(
@@ -81,10 +63,6 @@ async def _(event):
     except IndexError:
         return await event.eor(get_string("devs_1"), time=10)
     xx = await event.eor(get_string("com_1"))
-    if event.sender_id in _ignore_eval:
-        return await xx.edit(
-            "`You cannot use this command now. Contact owner of this bot!`"
-        )
     reply_to_id = event.reply_to_msg_id or event.id
     stdout, stderr = await bash(cmd, run_code=1)
     OUT = f"**☞ BASH\n\n• COMMAND:**\n`{cmd}` \n\n"
@@ -109,10 +87,8 @@ async def _(event):
             out = "**• OUTPUT:**"
             remove(li)
         else:
-            if all(":" in line for line in stdout.split("\n")):
+            if "pip" in cmd and all(":" in line for line in stdout.split("\n")):
                 try:
-                    from strings.strings import safe_load
-
                     load = safe_load(stdout)
                     stdout = ""
                     for data in list(load.keys()):
@@ -152,8 +128,10 @@ async def _(event):
 pp = pprint  # ignore: pylint
 bot = ultroid = ultroid_bot
 
+
 class u:
     ...
+
 
 def _parse_eval(value=None):
     if not value:
@@ -174,7 +152,7 @@ def _parse_eval(value=None):
 @ultroid_cmd(pattern="eval", fullsudo=True, only_devs=True)
 async def _(event):
     try:
-        cmd = event.text.split(" ", maxsplit=1)[1]
+        cmd = event.text.split(maxsplit=1)[1]
     except IndexError:
         return await event.eor(get_string("devs_2"), time=5)
     silent, gsource, xx = False, False, None
@@ -209,10 +187,6 @@ async def _(event):
             # Consider it as Code Error, and move on to be shown ahead.
             pass
     reply_to_id = event.reply_to_msg_id or event
-    if event.sender_id in _ignore_eval:
-        return await xx.edit(
-            "`You cannot use this command now. Contact owner of this bot!`"
-        )
     if any(item in cmd for item in KEEP_SAFE().All) and (
         not (event.out or event.sender_id == ultroid_bot.uid)
     ):
@@ -229,11 +203,13 @@ async def _(event):
     redirected_output = sys.stdout = StringIO()
     redirected_error = sys.stderr = StringIO()
     stdout, stderr, exc, timeg = None, None, None, None
+    tima = time.time()
     try:
         value = await aexec(cmd, event)
     except Exception:
         value = None
         exc = traceback.format_exc()
+    tima = time.time() - tima
     stdout = redirected_output.getvalue()
     stderr = redirected_error.getvalue()
     sys.stdout = old_stdout
@@ -257,11 +233,13 @@ async def _(event):
                 )
             await event.client.send_message(log_chat, msg, parse_mode="html")
         return
-    final_output = (
-        "__►__ **EVAL**\n```{}``` \n\n __►__ **OUTPUT**: \n```{}``` \n".format(
-            cmd,
-            evaluation,
-        )
+    tmt = tima * 1000
+    timef = time_formatter(tmt)
+    timeform = timef if not timef == "0s" else f"{tmt:.3f}ms"
+    final_output = "__►__ **EVAL** (__in {}__)\n```{}``` \n\n __►__ **OUTPUT**: \n```{}``` \n".format(
+        timeform,
+        cmd,
+        evaluation,
     )
     if len(final_output) > 4096:
         final_output = evaluation

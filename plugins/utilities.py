@@ -45,17 +45,15 @@
 
 • `{i}thumb <reply file>` : Download the thumbnail of the replied file.
 
-• `{i}ncode <file>`
-   Use - Paste the contents of file and send as pic.
-   
 • `{i}getmsg <message link>`
   Get messages from chats with forward/copy restrictions.
-
 """
+
 import calendar
 import html
 import io
 import os
+import pathlib
 import time
 from datetime import datetime as dt
 
@@ -64,9 +62,9 @@ try:
 except ImportError:
     Image = None
 
-from pyUltroid.functions.tools import get_chat_and_msgid
 from pyUltroid._misc._assistant import asst_cmd
 from pyUltroid.dB.gban_mute_db import is_gbanned
+from pyUltroid.functions.tools import get_chat_and_msgid
 
 try:
     from telegraph import upload_file as uf
@@ -106,7 +104,6 @@ from . import (
     json_parser,
     mediainfo,
     udB,
-    ultroid_bot,
     ultroid_cmd,
 )
 
@@ -119,8 +116,7 @@ _copied_msg = {}
 
 @ultroid_cmd(pattern="kickme$", fullsudo=True)
 async def leave(ult):
-    me = asst.me if ult.client._bot else ultroid_bot.me
-    await ult.eor(f"`{me.first_name} has left this group, bye!!.`")
+    await ult.eor(f"`{ult.client.me.first_name} has left this group, bye!!.`")
     await ult.client(LeaveChannelRequest(ult.chat_id))
 
 
@@ -470,10 +466,11 @@ async def abs_rmbg(event):
     pattern="telegraph( (.*)|$)",
 )
 async def telegraphcmd(event):
+    xx = await event.eor(get_string("com_1"))
     match = event.pattern_match.group(1).strip() or "Ultroid"
     reply = await event.get_reply_message()
     if not reply:
-        return await event.eor("`Reply to Message.`")
+        return await xx.eor("`Reply to Message.`")
     if not reply.media and reply.message:
         content = reply.message
     else:
@@ -496,13 +493,12 @@ async def telegraphcmd(event):
             except Exception as e:
                 amsg = f"Error : {e}"
             os.remove(getit)
-            return await event.eor(amsg)
-        with open(getit) as ab:
-            content = ab.read()
+            return await xx.eor(amsg)
+        content = pathlib.Path(getit).read_text()
         os.remove(getit)
     makeit = Telegraph.create_page(title=match, content=[content])
-    await eor(
-        event, f"Pasted to Telegraph : [Telegraph]({makeit['url']})", link_preview=False
+    await xx.eor(
+        f"Pasted to Telegraph : [Telegraph]({makeit['url']})", link_preview=False
     )
 
 
@@ -675,49 +671,6 @@ async def thumb_dl(event):
     m = await x.download_media(thumb=-1)
     await event.reply(file=m)
     os.remove(m)
-
-
-@ultroid_cmd(pattern="ncode$")
-async def coder_print(event):
-    try:
-        import pygments
-        from pygments.formatters import ImageFormatter
-        from pygments.lexers import Python3Lexer
-    except ImportError:
-        return await event.eor(
-            "`pygments` `not installed!`\nInstall it with `pip3 install pygments`"
-        )
-    if not event.reply_to_msg_id:
-        return await eod(event, "`Reply to a file or message!`", time=5)
-    msg = await event.get_reply_message()
-    if msg.document:
-        a = await event.client.download_media(
-            await event.get_reply_message(), "ncode.png"
-        )
-        with open(a, "r") as s:
-            c = s.read()
-    else:
-        a = None
-        c = msg.text
-    pygments.highlight(
-        c,
-        Python3Lexer(),
-        ImageFormatter(line_numbers=True),
-        "result.png",
-    )
-    res = await event.client.send_message(
-        event.chat_id,
-        "**Pasting this code on my page...**",
-        reply_to=event.reply_to_msg_id,
-    )
-    await event.client.send_file(
-        event.chat_id, "result.png", force_document=True, reply_to=event.reply_to_msg_id
-    )
-    await res.delete()
-    await event.delete()
-    if a:
-        os.remove(a)
-    os.remove("result.png")
 
 
 @ultroid_cmd(pattern="getmsg ?(.*)")

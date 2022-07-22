@@ -4,34 +4,11 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
-"""
-✘ Commands Available
 
-• `{i}alive` | `{i}alive inline`
-    Check if your bot is working.
+from . import get_help
 
-• `{i}ping`
-    Check Ultroid's response time.
+__doc__ = get_help("help_bot")
 
-• `{i}update`
-    See changelogs if any update is available.
-
-• `{i}cmds`
-    View all plugin names.
-
-• `{i}restart`
-    To restart your bot.
-
-• `{i}logs (sys)`
-    Get the full terminal logs.
-• `{i}logs carbon`
-    Get the carbonized sys logs.
-• `{i}logs heroku`
-   Get the latest 100 lines of heroku logs.
-
-• `{i}shutdown`
-    Turn off your bot.
-"""
 import os
 import sys
 import time
@@ -57,7 +34,6 @@ from telethon.utils import resolve_bot_file_id
 
 from . import (
     ATRA_COL,
-    inline_pic,
     LOGS,
     OWNER_NAME,
     ULTROID_IMAGES,
@@ -75,6 +51,7 @@ from . import (
     get_string,
     heroku_logs,
     in_pattern,
+    inline_pic,
     restart,
     shutdown,
     start_time,
@@ -85,7 +62,11 @@ from . import (
     updater,
 )
 
-ULTPIC = lambda: inline_pic() or choice(ULTROID_IMAGES)
+
+def ULTPIC():
+    return inline_pic() or choice(ULTROID_IMAGES)
+
+
 buttons = [
     [
         Button.url(get_string("bot_3"), "https://github.com/TeamUltroid/Ultroid"),
@@ -326,12 +307,9 @@ async def inline_alive(ult):
 @ultroid_cmd(pattern="update( (.*)|$)")
 async def _(e):
     xx = await e.eor(get_string("upd_1"))
-    if HOSTED_ON == "heroku" or (
-        e.pattern_match.group(1).strip()
-        and (
-            "fast" in e.pattern_match.group(1).strip()
-            or "soft" in e.pattern_match.group(1).strip()
-        )
+    if e.pattern_match.group(1).strip() and (
+        "fast" in e.pattern_match.group(1).strip()
+        or "soft" in e.pattern_match.group(1).strip()
     ):
         await bash("git pull -f && pip3 install -r requirements.txt")
         call_back()

@@ -5,47 +5,9 @@
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-from . import get_string
+from . import get_help
 
-__doc__ = get_string("help_admintools")
-
-# """
-# ✘ Commands Available -
-
-# • `{i}promote <reply to user/userid/username>`
-# • `{i}demote`
-#     Promote/Demote the user in the chat.
-
-# • `{i}ban <reply to user/userid/username> <reason>`
-# • `{i}unban`
-#     Ban/Unban the user from the chat.
-
-# • `{i}kick <reply to user/userid/username> <reason>`
-#     Kick the user from the chat.
-
-# • `{i}pin <reply to message>`
-#     Pin the message in the chat
-# • `{i}tpin <time> <temp pin message>`
-# • `{i}unpin (all) <reply to message>`
-#     Unpin the messages in the chat.
-
-# • `{i}pinned`
-#    Get pinned message in the current chat.
-# • `{i}listpinned`
-#    Get all pinned messages in current chat
-
-# • `{i}autodelete <24h/7d/1m/off>`
-#    Enable Auto Delete Messages in Chat.
-
-# • `{i}purge <reply to message>`
-#     Purge all messages from the replied message.
-
-# • `{i}purgeme <reply to message>`
-#     Purge Only your messages from the replied message.
-
-# • `{i}purgeall`
-#     Delete all msgs of replied user.
-# """
+__doc__ = get_help("help_admintools")
 
 import asyncio
 
@@ -380,7 +342,7 @@ async def fastpurger(purg):
         return await eor(purg, get_string("purge_1"), time=10)
     try:
         await purg.client.delete_messages(
-            purg.chat_id, list(range(purg.reply_to_msg_id, purg.id + 1))
+            purg.chat_id, list(range(purg.reply_to_msg_id, purg.id))
         )
 
     except Exception as er:

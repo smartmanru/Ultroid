@@ -4,20 +4,7 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
-"""
-✘ Commands Available -
 
-`{i}makevoice <reply to audio>`
-   creates a voice note from Audio.
-
-`{i}atrim <from time> - <to time>`
-   trim audio as per given time.
-   time must be in seconds. `{i}atrim 50-70`
-
-`{i}extractaudio <reply to media>`
-   To extract the audio from it.
-
-"""
 
 import os
 import time
@@ -32,6 +19,7 @@ from . import (
     eod,
     eor,
     genss,
+    get_help,
     get_string,
     humanbytes,
     mediainfo,
@@ -40,6 +28,8 @@ from . import (
     ultroid_cmd,
     uploader,
 )
+
+__doc__ = get_help("help_audiotools")
 
 
 @ultroid_cmd(pattern="makevoice$")
@@ -156,9 +146,7 @@ async def ex_aud(e):
 
     f_time = time.time()
     try:
-        fo = await uploader(
-            out_file, out_file, f_time, msg, f"Uploading {out_file}..."
-        )
+        fo = await uploader(out_file, out_file, f_time, msg, f"Uploading {out_file}...")
 
     except FileNotFoundError:
         return await eor(msg, get_string("audiotools_9"))

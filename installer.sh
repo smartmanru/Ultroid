@@ -19,28 +19,53 @@ clone_repo(){
     if [ ! $BRANCH ]
         then export BRANCH="main"
     fi
-    echo -e "\n\nCloning Ultroid ${BRANCH}... "
+    if [ -d $DIR ]
+        then
+            echo -e $DIR "Already exists.."
+            cd $DIR
+            git pull
+            currentbranch="$(git rev-parse --abbrev-ref HEAD)"
+            if [currentbranch != $BRANCH]
+                then
+                    git checkout $BRANCH
+            fi
+            return
+    fi
+    echo -e "Cloning Ultroid ${BRANCH}... "
     git clone -b $BRANCH $REPO $DIR
 }
 
 install_requirements(){
-    echo -e "\n\nInstalling requirements... "
-    pip3 install -q -r $DIR/requirements.txt && pip3 install av -q --no-binary av
+    pip install --upgrade pip
+    echo -e "Installing requirements... "
+    pip3 install -r $DIR/requirements.txt
+    pip3 install -r $DIR/resources/startup/optional-requirements.txt
 }
 
 railways_dep(){
-    if [ ! $RAILWAY_STATIC_URL ]
+    if [ $RAILWAY_STATIC_URL ]
         then
-            echo -e "\n\nInstalling YouTube dependency... "
+            echo -e "Installing YouTube dependency... "
             pip3 install -q yt-dlp
     fi
 }
 
-install_okteto_cli(){
+misc_install(){
     if [ $OKTETO_TOKEN ]
         then
-            echo -e "\n\nInstalling Okteto-CLI... "
+            echo -e "Installing Okteto-CLI... "
             curl https://get.okteto.com -sSfL | sh
+    elif [ $VCBOT ]
+        then
+            if [ -d $DIR/vcbot]
+                then
+                    cd $DIR/vcbot
+                    git pull
+            else
+                echo -e "Cloning VCBOT.."
+                git clone https://github.com/TeamUltroid/VcBot $DIR/vcbot
+            fi
+            pip3 install pytgcalls==3.0.0.dev21 && pip3 install av -q --no-binary av
     fi
 }
 
@@ -59,11 +84,11 @@ dep_install(){
 }
 
 main(){
-    (clone_repo) & spinner
-    (install_requirements) & spinner
-    (railways_dep) & spinner
-    (dep_install) & spinner
-    (install_okteto_cli) & spinner
+    (clone_repo)
+    (install_requirements)
+    (railways_dep)
+    (dep_install)
+    (misc_install)
 }
 
 main

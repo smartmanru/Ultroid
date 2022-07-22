@@ -47,51 +47,41 @@ except ImportError:
     cv2 = None
 
 try:
-    from google_trans_new import google_translator
-except ImportError:
-    google_translator = None
-try:
     from htmlwebshot import WebShot
 except ImportError:
     WebShot = None
-from pyUltroid.functions.tools import metadata
+from pyUltroid.functions.tools import metadata, translate
 from telethon.errors.rpcerrorlist import MessageTooLongError, YouBlockedUserError
 from telethon.tl.types import (
     ChannelParticipantAdmin,
     ChannelParticipantsBots,
     DocumentAttributeVideo,
 )
-from telethon.utils import pack_bot_file_id
 
 from . import HNDLR, LOGS, async_searcher, bash, con, eor, get_string
 from . import humanbytes as hb
 from . import inline_mention, is_url_ok, mediainfo, ultroid_cmd
 
 
-@ultroid_cmd(pattern="tr", manager=True)
+@ultroid_cmd(pattern="tr( (.*)|$)", manager=True)
 async def _(event):
-    if len(event.text) > 3 and event.text[3] != " ":
-        return
-    input = event.text[4:].split(maxsplit=1)
+    input = event.pattern_match.group(1).strip().split(maxsplit=1)
     txt = input[1] if len(input) > 1 else None
     if input:
         input = input[0]
     if txt:
         text = txt
-        lan = input or "en"
     elif event.is_reply:
         previous_message = await event.get_reply_message()
         text = previous_message.message
-        lan = input or "en"
     else:
         return await eor(
             event, f"`{HNDLR}tr LanguageCode` as reply to a message", time=5
         )
-    translator = google_translator()
+    lan = input or "en"
     try:
-        tt = translator.translate(text, lang_tgt=lan)
-        fr = translator.detect(text)
-        output_str = f"**TRANSLATED** from {fr} to {lan}\n{tt}"
+        tt = translate(text, lang_tgt=lan)
+        output_str = f"**TRANSLATED** to {lan}\n{tt}"
         await event.eor(output_str)
     except Exception as exc:
         LOGS.exception(exc)
@@ -103,34 +93,25 @@ async def _(event):
     manager=True,
 )
 async def _(event):
+    ult = event
     match = event.pattern_match.group(1).strip()
-    if event.reply_to_msg_id:
-        await event.get_input_chat()
-        r_msg = await event.get_reply_message()
-        if r_msg.media:
-            bot_api_file_id = pack_bot_file_id(r_msg.media)
-            await event.eor(
-                f"**Current Chat ID:**  `{str(event.chat_id)}`\n**From User ID:**  `{str(r_msg.sender_id)}`\n**Bot API File ID:**  `{bot_api_file_id}`\n**Msg ID:**  `{str(r_msg.id)}`"
-            )
-
-        else:
-            await event.eor(
-                f"**Chat ID:**  `{str(event.chat_id)}`\n**User ID:**  `{str(r_msg.sender_id)}`\n**Msg ID:**  `{str(r_msg.id)}`"
-            )
-
-    elif match:
+    if match:
         try:
             ids = await event.client.parse_id(match)
         except Exception as er:
             return await event.eor(str(er))
-        await event.eor(
-            f"**Chat ID:**  `{str(event.chat_id)}`\n**User ID:**  `{str(ids)}`"
+        return await event.eor(
+            f"**Chat ID:**  `{event.chat_id}`\n**User ID:**  `{ids}`"
         )
-
-    else:
-        await event.eor(
-            f"**Current Chat ID:**  `{str(event.chat_id)}`\n**Msg ID:**  `{str(event.id)}`"
-        )
+    data = f"**Current Chat ID:**  `{event.chat_id}`"
+    if event.reply_to_msg_id:
+        event = await event.get_reply_message()
+        data += f"\n**From User ID:**  `{event.sender_id}`"
+    if event.media:
+        bot_api_file_id = event.file.id
+        data += f"\n**Bot API File ID:**  `{bot_api_file_id}`"
+    data += f"\n**Msg ID:**  `{event.id}`"
+    await ult.eor(data)
 
 
 @ultroid_cmd(pattern="bots( (.*)|$)", groups_only=True, manager=True)
@@ -240,6 +221,21 @@ async def _(e):
         await e.eor("`Reply to a gif or audio file only.`")
 
 
+FilesEMOJI = {
+    "py": "🐍",
+    "json": "🔮",
+    ("sh", "bat"): "⌨️",
+    (".mkv", ".mp4", ".avi", ".gif", "webm"): "🎥",
+    (".mp3", ".ogg", ".m4a", ".opus"): "🔊",
+    (".jpg", ".jpeg", ".png", ".webp", ".ico"): "🖼",
+    (".txt", ".text", ".log"): "📄",
+    (".apk", ".xapk"): "📲",
+    (".pdf", ".epub"): "📗",
+    (".zip", ".rar"): "🗜",
+    (".exe", ".iso"): "⚙",
+}
+
+
 @ultroid_cmd(
     pattern="ls( (.*)|$)",
 )
@@ -254,61 +250,21 @@ async def _(e):
     files = glob.glob(files)
     if not files:
         return await e.eor("`Directory Empty or Incorrect.`", time=5)
-    pyfiles = []
-    jsons = []
-    vdos = []
-    audios = []
-    pics = []
-    others = []
-    otherfiles = []
-    folders = []
-    text = []
-    apk = []
-    exe = []
-    zip_ = []
-    book = []
+    allfiles = []
     for file in sorted(files):
         if os.path.isdir(file):
-            folders.append(f"📂 {str(file)}")
-        elif str(file).endswith(".py"):
-            pyfiles.append(f"🐍 {str(file)}")
-        elif str(file).endswith(".json"):
-            jsons.append(f"🔮 {str(file)}")
-        elif str(file).endswith((".mkv", ".mp4", ".avi", ".gif", "webm")):
-            vdos.append(f"🎥 {str(file)}")
-        elif str(file).endswith((".mp3", ".ogg", ".m4a", ".opus")):
-            audios.append(f"🔊 {str(file)}")
-        elif str(file).endswith((".jpg", ".jpeg", ".png", ".webp", ".ico")):
-            pics.append(f"🖼 {str(file)}")
-        elif str(file).endswith((".txt", ".text", ".log")):
-            text.append(f"📄 {str(file)}")
-        elif str(file).endswith((".apk", ".xapk")):
-            apk.append(f"📲 {str(file)}")
-        elif str(file).endswith((".exe", ".iso")):
-            exe.append(f"⚙ {str(file)}")
-        elif str(file).endswith((".zip", ".rar")):
-            zip_.append(f"🗜 {str(file)}")
-        elif str(file).endswith((".pdf", ".epub")):
-            book.append(f"📗 {str(file)}")
-        elif "." in str(file)[1:]:
-            others.append(f"🏷 {str(file)}")
+            allfiles.append(f"📂 {file}")
         else:
-            otherfiles.append(f"📒 {str(file)}")
-    omk = [
-        *sorted(folders),
-        *sorted(pyfiles),
-        *sorted(jsons),
-        *sorted(zip_),
-        *sorted(vdos),
-        *sorted(pics),
-        *sorted(audios),
-        *sorted(apk),
-        *sorted(exe),
-        *sorted(book),
-        *sorted(text),
-        *sorted(others),
-        *sorted(otherfiles),
-    ]
+            for ext in FilesEMOJI.keys():
+                if file.endswith(ext):
+                    allfiles.append(f"{FilesEMOJI[ext]} {file}")
+                    break
+            else:
+                if "." in str(file)[1:]:
+                    allfiles.append(f"🏷 {file}")
+                else:
+                    allfiles.append(f"📒 {file}")
+    omk = sorted(allfiles)
     text = ""
     fls, fos = 0, 0
     flc, foc = 0, 0
@@ -353,6 +309,8 @@ async def _(e):
         ttol = "0 B"
     text += f"\n\n`Folders` :  `{foc}` :   `{tfos}`\n`Files` :       `{flc}` :   `{tfls}`\n`Total` :       `{flc+foc}` :   `{ttol}`"
     try:
+        if (flc + foc) > 100:
+            text = text.replace("`", "")
         await e.eor(text)
     except MessageTooLongError:
         with io.BytesIO(str.encode(text)) as out_file:
